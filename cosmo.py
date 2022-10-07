@@ -15,7 +15,7 @@ class Cosmology:
         self.Pkfile = Pkfile
 
     def _cap_hubble(self, a):
-        '''Calculate the Hubble constant at redshift z. '''
+        '''Calculate the dimensionless Hubble constant at redshift z. '''
         hubble = np.sqrt(self._omegam / a**3 + self._omegacc)
         return hubble
 
