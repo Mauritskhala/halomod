@@ -1,5 +1,7 @@
+from logging import warning
 import numpy as np
 from scipy.interpolate import interp1d as p1d
+from scipy.integrate import simps
 
 
 class Cosmology:
@@ -18,6 +20,18 @@ class Cosmology:
         '''Calculate the dimensionless Hubble constant at redshift z. '''
         hubble = np.sqrt(self._omegam / a**3 + self._omegacc)
         return hubble
+
+    def _sigma0(self, klist, r):
+        '''Calculate the \sigma(r) for given k range.'''
+        sigma = np.zeros(0)
+        x = np.outer(klist, r)
+        for i in len(r):
+            w_tophat = 3. / x[:, i]**3 * \
+                (np.sin(x[:, i])-x[:, i]*np.cos(x[:, i]))
+            integral = 4. * np.pi * klist ** 2 * \
+                self.Pk_func(klist) * w_tophat**2
+            np.append(sigma, integral)
+        return sigma
 
     @property
     def Pk_func(self):
@@ -54,6 +68,11 @@ class Cosmology:
         '''Return the linear growth factor at redshift z'''
         return 2.5 * self.Om_z / (self.Om_z**(4./7.)-self.Occ_z
                                   + (1. + self.Om_z/2.) * (1+self.Occ_z/70))
+
+    @property
+    def Dgrowth0(self):
+        return 2.5 * self.Om_z / (self._omegam**(4./7.)-self._omegacc
+                                  + (1. + self._omegam/2.) * (1+self._omegacc/70))
 
     @property
     def delta_c(self):
