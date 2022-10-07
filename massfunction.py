@@ -1,5 +1,7 @@
 import numpy as np
 from cosmo import Cosmology
+from scipy.interpolate import interp1d
+from scipy.misc import derivative
 
 
 class Massfunction:
@@ -16,30 +18,31 @@ class Massfunction:
         a_para = 0.707
         p_para = 0.3
         nuprime = np.sqrt(a_para) * nu
-        return 2. * norm_A*(1 + 1./np.power(nuprime, 2.*p_para)) \
-            * np.sqrt(nuprime**2/2.*np.pi) * np.exp(-nuprime**2/2.)
+        return 2. * norm_A*(1 + 1. / np.power(nuprime, 2.*p_para)) \
+            * np.sqrt(nuprime**2 / 2.*np.pi) * np.exp(-nuprime**2/2.)
 
     @property
     def k(self):
         kmax = 3. / np.min(self.reff)
         kmin = 0.1 / np.max(self.reff)
-        return np.logspace(np.log10(kmin),np.log10(kmax),self.knum)
+        return np.logspace(np.log10(kmin), np.log10(kmax), self.knum)
 
     @property
     def sigma0(self):
-        return self.cosmo._sigma0(self.k,self.reff)
+        return self.cosmo._sigma0(self.k, self.reff)
 
     @property
     def nu(self):
-        return self.cosmo.delta_c/self.sigma0*self.cosmo.Dgrowth0/self.cosmo.Dgrowth
+        return self.cosmo.delta_c / self.sigma0 * self.cosmo.Dgrowth0 / self.cosmo.Dgrowth
 
     @property
     def dlnnu_dlnM(self):
-        pass
+        nu_m = interp1d(self.m, self.nu, kind="cubic")
+        return derivative(nu_m, self.m)
 
     @property
     def dndlnm(self):
-        return self.rho_0/self.m*self.nufnu(self.nu)*self.dlnnu_dlnM
+        return self.rho_0 / self.m * self.nufnu(self.nu) * self.dlnnu_dlnM
 
     @property
     def rho_0(self):
