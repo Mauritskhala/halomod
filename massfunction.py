@@ -5,35 +5,50 @@ from cosmo import Cosmology
 
 class Massfunction:
 
-    def __init__(self, m, Pkfile, knum=500, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75*1e10):
-        self.cosmo = Cosmology(Pkfile, z, omegam, omegacc, rhocrit)
+    def __init__(
+        self, m, Pkfile,
+        knum=500, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75e10,
+        ff_param=(.322, .707, .3), bias_param=(.707, .3)
+    ):
+        self.cosmo = Cosmology(Pkfile, z, omegam, omegacc, rhocrit,)
         self.z = z
         self.m = m
         self.knum = knum
+        self.norm_A = ff_param[0]
+        self.a_para = ff_param[1]
+        self.p_para = ff_param[2]
+        self.bias_a = bias_param[0]
+        self.bias_p = bias_param[1]
 
     def nufnu(self, nu):
-        '''Return the fitting function of mass function'''
-        norm_A = 0.322
-        a_para = 0.707
-        p_para = 0.3
-        nuprime = np.sqrt(a_para) * nu
+        '''Return the fitting function of mass function. Here we used the ST mass function( Sheth & Tormen (1999)).'''
+        norm_A = self.norm_A
+        p_para = self.p_para
+        nuprime = np.sqrt(self.a_para) * nu
+
         return 2. * norm_A * (1. + 1. / np.power(nuprime, 2.*p_para)) \
-            * np.sqrt(nuprime**2. / (2.*np.pi)) * np.exp(- (nuprime ** 2 /2.))
+            * np.sqrt(nuprime**2. / (2.*np.pi)) * np.exp(- (nuprime ** 2 / 2.))
 
     @property
     def k(self):
+        '''Return the wavenumber k. The range of k is derived by the radii convert from mass. This is to ensure the convergence of :math:`\ frac{\mathrm{d\quadln}\ nu}{\mathrm{d\quadln}\m}`'''
         kmax = 10. / np.min(self.reff)
         kmin = .01 / np.max(self.reff)
         return np.logspace(np.log10(kmin), np.log10(kmax), self.knum)
 
     @property
     def sigma0(self):
+        '''Return the mass variance at radii'''
         return self.cosmo.sigma_n(self.k, self.reff)
 
     @property
     def nu(self):
         return self.cosmo.delta_c / self.sigma0 *\
             self.cosmo.Dgrowth0 / self.cosmo.Dgrowth
+
+    @property
+    def nu2(self):
+        return self.nu**2
 
     @property
     def dlnss_dlnm(self):
@@ -47,9 +62,12 @@ class Massfunction:
     @property
     def dlnnu_dlnm(self):
         return -self.dlnss_dlnm
-        
-    @property 
+
+    @property
     def _dlnnudlnm(self):
+        '''The unused method to getting :math:`\ frac{\mathrm{d\quadln}\ nu}{\mathrm{d\quadln}\m}`.\\
+        This way uses finite difference instead.
+        '''
         nu = self.nu
         mass = self.m
         dlnnu_dlnM = []
@@ -74,16 +92,36 @@ class Massfunction:
 
     @property
     def dndlnm(self):
+        '''Return the mass function in form :math:`\ frac{\mathrm{d}n}{\mathrm{d\quadln}\m}`'''
         return self.rho_0 / self.m * self.nufnu(self.nu) * self.dlnnu_dlnm
 
     @property
     def dndm(self):
+        '''Return the mass function in form :math:`\ frac{\mathrm{d}n}{\mathrm{d}\m}`'''
         return self.dndlnm/self.m
 
     @property
     def rho_0(self):
+        '''Return the mean density at present'''
         return self.cosmo.rho_0
 
     @property
+    def delta_c(self):
+        '''Return the linear critical density'''
+        return self.cosmo.delta_c
+
+    @property
     def reff(self):
-        return np.power(self.m/(4. * np.pi / 3. * self.rho_0), 1./3.)
+        '''Convert the given mass to corresponding radius'''
+        return (self.m/(4. * np.pi / 3. * self.rho_0))**(1./3.)
+
+    @property
+    def bias(self):
+        '''Return the halo bias. Here we used ST99(Sheth & Tormen (1999))'''
+        a = self.bias_a
+        p = self.bias_p
+        return (
+            1
+            + (a * self.nu2 - 1) / self.delta_c
+            + (2 * p / self.delta_c) / (1 + (a * self.nu2) ** p)
+        )

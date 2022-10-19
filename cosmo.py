@@ -9,7 +9,7 @@ class Cosmology:
 
     '''
 
-    def __init__(self, Pkfile, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75*1e10):
+    def __init__(self, Pkfile, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75e10):
         self._omegam = omegam
         self._omegacc = omegacc
         self._rhocrit = rhocrit
@@ -32,19 +32,23 @@ class Cosmology:
         return sigma
 
     def tophat_kspace(self, x):
+        '''Calculate the tophat filter in Fourier space'''
         return 3. / x ** 3. * (np.sin(x) - x * np.cos(x))
 
     def tophat_dw_dx(self, x):
+        '''Calculate the differential of tophat filter in Fourier space'''
         return (3. * x * np.cos(x) + (x ** 2. - 3.) * np.sin(x)) / x ** 4.
 
     @property
     def Pk_func(self):
+        '''Return the power spectrum function(linear interpolation of the given power spectrum).'''
         klist, pklist = np.loadtxt(self.Pkfile, usecols=(0, 1), unpack=True)
         Pk_func = p1d(klist, pklist, kind="linear")
         return Pk_func
 
     @property
     def Pk_func_dimless(self):
+        '''Return the dimensionless power spectrum function(linear interpolation of the given power spectrum).'''
         klist, pklist = np.loadtxt(self.Pkfile, usecols=(0, 1), unpack=True)
         pklist = pklist/(2 * np.pi ** 2) * klist ** 3
         Pk_func = p1d(klist, pklist, kind="linear")
@@ -86,6 +90,7 @@ class Cosmology:
 
     @property
     def Dgrowth0(self):
+        '''Return the linear growth factor at present'''
         return 2.5 * self._omegam  / (self._omegam**(4./7.)-self._omegacc
                                   + (1. + self._omegam/2.) * (1+self._omegacc/70))
 
