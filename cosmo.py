@@ -24,14 +24,14 @@ class Cosmology:
     def sigma_n(self, klist, r, order=0):
         '''Calculate the :math:`\sigma_n(r)` for given k range. The default order is 0, which means that the result is mass variance.'''
         x = np.outer(r, klist)
-        w_tophat = self.tophat_kspace(x)
+        w_tophat = self._tophat_kspace(x)
         dfk = klist ** (2. * order - 1) * \
             self.Pk_func_dimless(klist) * w_tophat ** 2.
         integral = simpson(dfk, klist, axis=-1)
         sigma = np.sqrt(integral)
         return sigma
 
-    def tophat_kspace(self, x):
+    def _tophat_kspace(self, x):
         '''Calculate the tophat filter in Fourier space'''
         return 3. / x ** 3. * (np.sin(x) - x * np.cos(x))
 
@@ -68,6 +68,10 @@ class Cosmology:
         return self._rhocrit*self._omegam
 
     @property
+    def rho_z(self):
+        return self.rho_0 * (self.z + 1) ** 3
+
+    @property
     def hz(self):
         '''Return dimensionless H at redshift z'''
         return self._cap_hubble(self.a)
@@ -86,13 +90,13 @@ class Cosmology:
     def Dgrowth(self):
         '''Return the linear growth factor at redshift z'''
         return 2.5 * self.Om_z * self.a / (self.Om_z**(4./7.)-self.Occ_z
-                                         + (1. + self.Om_z/2.) * (1+self.Occ_z/70))
+                                           + (1. + self.Om_z/2.) * (1+self.Occ_z/70))
 
     @property
     def Dgrowth0(self):
         '''Return the linear growth factor at present'''
-        return 2.5 * self._omegam  / (self._omegam**(4./7.)-self._omegacc
-                                  + (1. + self._omegam/2.) * (1+self._omegacc/70))
+        return 2.5 * self._omegam / (self._omegam**(4./7.)-self._omegacc
+                                     + (1. + self._omegam/2.) * (1+self._omegacc/70))
 
     @property
     def delta_c(self):

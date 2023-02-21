@@ -53,7 +53,7 @@ class Massfunction:
     @property
     def dlnss_dlnm(self):
         x = np.outer(self.reff, self.k)
-        wth = self.cosmo.tophat_kspace(x)
+        wth = self.cosmo._tophat_kspace(x)
         dwth = self.cosmo.tophat_dw_dx(x)
         pk = self.cosmo.Pk_func_dimless(self.k)
         integ = pk * wth * dwth
