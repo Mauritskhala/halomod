@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import erf
 
+
 class Zehavi05:
     def __init__(
         self,
@@ -11,19 +12,20 @@ class Zehavi05:
         self.mmin = 10 ** param[0]
         self.m1 = 10 ** param[1]
         self.alpha = param[2]
-        mindex = np.where(self.m > self.mmin)
+        mindex = np.where(self.m < self.mmin)
         self.idx = mindex
 
     @property
     def cen_bar(self):
-        nc = np.zeros_like(self.m)
-        nc[self.idx] = 1
+        nc = np.ones_like(self.m)
+        nc[self.idx] = 0
         return nc
 
     @property
     def satt_bar(self):
         ns = np.zeros_like(self.m)
-        ns[self.idx] = (self.m / self.m1) ** self.alpha
+        ns = (self.m / self.m1) ** self.alpha
+        ns[self.idx] = 0
         return ns
 
     @property
