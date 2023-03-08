@@ -3,15 +3,21 @@ from scipy.integrate import simpson
 from cosmo import Cosmology
 
 
-class Massfunction:
+class Massfunction(Cosmology):
 
     def __init__(
-        self, m, Pkfile,
-        knum=500, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75e10,
-        ff_param=(.322, .707, .3), bias_param=(.707, .3)
+        self, 
+        m, 
+        Pkfile,
+        knum=500, 
+        z=0, 
+        omegam=0.3, 
+        omegacc=0.7, 
+        rhocrit=27.75e10,
+        ff_param=(.322, .707, .3), 
+        bias_param=(.707, .3)
     ):
-        self.cosmo = Cosmology(Pkfile, z, omegam, omegacc, rhocrit,)
-        self.z = z
+        super().__init__(Pkfile, z, omegam, omegacc, rhocrit,)
         self.m = m
         self.knum = knum
         self.norm_A = ff_param[0]
@@ -26,12 +32,15 @@ class Massfunction:
         p_para = self.p_para
         nuprime = np.sqrt(self.a_para) * nu
 
-        return 2. * norm_A * (1. + 1. / np.power(nuprime, 2.*p_para)) \
-            * np.sqrt(nuprime**2. / (2.*np.pi)) * np.exp(- (nuprime ** 2 / 2.))
+        return 2. * norm_A * (1. + 1. / np.power(nuprime, 2. * p_para)) \
+            * np.sqrt(nuprime ** 2. / (2. * np.pi)) * np.exp(- (nuprime ** 2 / 2.))
 
     @property
     def k(self):
-        '''Return the wavenumber k. The range of k is derived by the radii convert from mass. This is to ensure the convergence of :math:`\ frac{\mathrm{d\quadln}\ nu}{\mathrm{d\quadln}\m}`'''
+        '''
+        Return the wavenumber k. The range of k is derived by the radii convert from mass. 
+        This is to ensure the convergence of :math:`\ frac{\mathrm{d\quadln}\ nu}{\mathrm{d\quadln}\m}`
+        '''
         kmax = 10. / np.min(self.reff)
         kmin = .01 / np.max(self.reff)
         return np.logspace(np.log10(kmin), np.log10(kmax), self.knum)
@@ -39,23 +48,22 @@ class Massfunction:
     @property
     def sigma0(self):
         '''Return the mass variance at radii'''
-        return self.cosmo.sigma_n(self.k, self.reff)
+        return self.sigma_n(self.k, self.reff)
 
     @property
     def nu(self):
-        return self.cosmo.delta_c / self.sigma0 *\
-            self.cosmo.Dgrowth0 / self.cosmo.Dgrowth
+        return self.delta_c / self.sigma0 * self.Dgrowth0 / self.Dgrowth
 
     @property
     def nu2(self):
-        return self.nu**2
+        return self.nu ** 2
 
     @property
     def dlnss_dlnm(self):
         x = np.outer(self.reff, self.k)
-        wth = self.cosmo._tophat_kspace(x)
-        dwth = self.cosmo.tophat_dw_dx(x)
-        pk = self.cosmo.Pk_func_dimless(self.k)
+        wth = self._tophat_kspace(x)
+        dwth = self.tophat_dw_dx(x)
+        pk = self.Pk_func_dimless(self.k)
         integ = pk * wth * dwth
         return self.reff / self.sigma0 ** 2 * simpson(integ, self.k, axis=-1)
 
@@ -99,16 +107,6 @@ class Massfunction:
     def dndm(self):
         '''Return the mass function in form :math:`\ frac{\mathrm{d}n}{\mathrm{d}\m}`'''
         return self.dndlnm/self.m
-
-    @property
-    def rho_0(self):
-        '''Return the mean density at present'''
-        return self.cosmo.rho_0
-
-    @property
-    def delta_c(self):
-        '''Return the linear critical density'''
-        return self.cosmo.delta_c
 
     @property
     def reff(self):

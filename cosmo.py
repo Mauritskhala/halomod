@@ -50,13 +50,13 @@ class Cosmology:
     def Pk_func_dimless(self):
         '''Return the dimensionless power spectrum function(linear interpolation of the given power spectrum).'''
         klist, pklist = np.loadtxt(self.Pkfile, usecols=(0, 1), unpack=True)
-        pklist = pklist/(2 * np.pi ** 2) * klist ** 3
+        pklist = pklist / (2 * np.pi ** 2) * klist ** 3
         Pk_func = p1d(klist, pklist, kind="linear")
         return Pk_func
 
     @property
     def a(self):
-        return 1./(1.+self.z)
+        return 1. / (1. + self.z)
 
     @property
     def h0(self):
@@ -79,24 +79,24 @@ class Cosmology:
     @property
     def Om_z(self):
         '''Return \Omega_z at redshift z'''
-        return self._omegam / self.a**3 * (self.h0/self.hz)**2
+        return self._omegam / self.a ** 3 * (self.h0 / self.hz) ** 2
 
     @property
     def Occ_z(self):
         '''Return \Omega_c at redshift z'''
-        return self._omegacc * (self.h0/self.hz)**2
+        return self._omegacc * (self.h0 / self.hz) ** 2
 
     @property
     def Dgrowth(self):
         '''Return the linear growth factor at redshift z'''
-        return 2.5 * self.Om_z * self.a / (self.Om_z**(4./7.)-self.Occ_z
-                                           + (1. + self.Om_z/2.) * (1+self.Occ_z/70))
+        return 2.5 * self.Om_z * self.a / (self.Om_z ** (4./7.) - self.Occ_z
+                                           + (1. + self.Om_z / 2.) * (1. + self.Occ_z / 70))
 
     @property
     def Dgrowth0(self):
         '''Return the linear growth factor at present'''
-        return 2.5 * self._omegam / (self._omegam**(4./7.)-self._omegacc
-                                     + (1. + self._omegam/2.) * (1+self._omegacc/70))
+        return 2.5 * self._omegam / (self._omegam ** (4./7.) - self._omegacc
+                                     + (1. + self._omegam/2.) * (1 + self._omegacc/70))
 
     @property
     def delta_c(self):
@@ -104,4 +104,4 @@ class Cosmology:
         We use the fitting formula from Weinberg & Kamionkowski (2003);  
         see also Kitayama & Suto(1996) 
         '''
-        return 3. / 20. * (12*np.pi)**(2./3.) * (1 + .013*np.log10(self.Om_z))
+        return 3. / 20. * (12 * np.pi) ** (2./3.) * (1 + .013 * np.log10(self.Om_z))

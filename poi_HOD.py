@@ -34,7 +34,7 @@ class Zehavi05:
 
     @property
     def cspair(self):
-        return self.satt_bar * self.cen_bar
+        return self.satt_bar * self.cen_bar * 2
 
     @property
     def sspair(self):
