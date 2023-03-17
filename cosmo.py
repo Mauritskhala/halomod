@@ -1,12 +1,13 @@
-from logging import warning
+from astropy.cosmology.utils import aszarr, vectorize_redshift_method
 import numpy as np
 from scipy.interpolate import interp1d as p1d
-from scipy.integrate import simpson
+from scipy.integrate import simpson, quad
 
 
 class Cosmology:
     '''The cosmology model use in the simulation. 
-
+    Used a strange decorator from `astropy`. So why don't I just 
+    use `FLRW` as a father class?
     '''
 
     def __init__(self, Pkfile, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75e10):
@@ -18,10 +19,15 @@ class Cosmology:
 
     def _cap_hubble(self, a):
         '''Calculate the dimensionless Hubble constant at redshift z. '''
-        hubble = np.sqrt(self._omegam / a**3 + self._omegacc)
+        hubble = np.sqrt(self._omegam / a ** 3 + self._omegacc)
         return hubble
 
-    def sigma_n(self, klist, r, order=0):
+    @vectorize_redshift_method(nin=1)
+    def _comoving_func(self, z):
+        f = lambda z: 1 / self._cap_hubble(1. / (1.+ z))
+        return quad(f, 0, z)[0] * 2997.92458 
+
+    def _sigma_n(self, klist, r, order=0):
         '''Calculate the :math:`\sigma_n(r)` for given k range. The default order is 0, which means that the result is mass variance.'''
         x = np.outer(r, klist)
         w_tophat = self._tophat_kspace(x)
@@ -35,7 +41,7 @@ class Cosmology:
         '''Calculate the tophat filter in Fourier space'''
         return 3. / x ** 3. * (np.sin(x) - x * np.cos(x))
 
-    def tophat_dw_dx(self, x):
+    def _tophat_dw_dx(self, x):
         '''Calculate the differential of tophat filter in Fourier space'''
         return (3. * x * np.cos(x) + (x ** 2. - 3.) * np.sin(x)) / x ** 4.
 
