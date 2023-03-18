@@ -93,7 +93,7 @@ class Angular(FullHOD):
         self,
         pzfname,
         theta=np.logspace(-3, np.log10(2), 30),
-        urange=np.logspace(-2, 2, 100),
+        urange=np.logspace(-3, 3, 600),
         **kwargs,
     ):
         super().__init__(**kwargs)
