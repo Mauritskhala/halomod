@@ -41,14 +41,14 @@ class Massfunction(Cosmology):
         Return the wavenumber k. The range of k is derived by the radii convert from mass. 
         This is to ensure the convergence of :math:`\ frac{\mathrm{d\quadln}\ nu}{\mathrm{d\quadln}\m}`
         '''
-        kmax = 10. / np.min(self.reff)
-        kmin = .01 / np.max(self.reff)
+        kmax = 100. / np.min(self.reff)
+        kmin = .005 / np.max(self.reff)
         return np.logspace(np.log10(kmin), np.log10(kmax), self.knum)
 
     @property
     def sigma0(self):
         '''Return the mass variance at radii'''
-        return self.sigma_n(self.k, self.reff)
+        return self._sigma_n(self.k, self.reff)
 
     @property
     def nu(self):
@@ -62,7 +62,7 @@ class Massfunction(Cosmology):
     def dlnss_dlnm(self):
         x = np.outer(self.reff, self.k)
         wth = self._tophat_kspace(x)
-        dwth = self.tophat_dw_dx(x)
+        dwth = self._tophat_dw_dx(x)
         pk = self.Pk_func_dimless(self.k)
         integ = pk * wth * dwth
         return self.reff / self.sigma0 ** 2 * simpson(integ, self.k, axis=-1)
