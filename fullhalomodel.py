@@ -83,8 +83,8 @@ class FullHOD(Massfunction):
 
     @property
     def power_2h(self):
-        b1eff = simpson(self.dndm * self.hod.total_occupation *
-                        np.abs(self.profile._u(self.kmodel)) / self.ngbar, self.m)
+        b1eff = simpson(self.dndm * self.hod.total_occupation * self.bias*
+                        np.abs(self.profile._u(self.kmodel)) / self.ngbar, self.m) * self.Dgrowth / self.Dgrowth0
         return b1eff ** 2 * self.Pk_func(self.kmodel)
 
 
@@ -92,29 +92,35 @@ class Angular(FullHOD):
     def __init__(
         self,
         pzfname,
-        theta=np.logspace(-3, np.log10(2), 30),
+        deg=np.logspace(-3, np.log10(2), 30),
         urange=np.logspace(-3, 3, 600),
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.pzfname = pzfname
-        self.deg = theta
+        self.deg = deg
         self.urange = urange
 
     def corr_3d(self,r):
         f=interp1d(self.r, self.corr_full)
         return f(r)
     
-    @property
-    def ang_projection(self):
+    def ang_projection(self,xi):
         x = self._comoving_func(self.zrange)
         pintg = (self.patz * self._cap_hubble(1. /
                  (1. + self.zrange)) / 2997.92458) ** 2
         R = np.sqrt(np.add.outer(np.outer(self.theta ** 2, x ** 2), self.urange ** 2)).flatten()
         integrand = np.einsum(
-        "kij,i->kij", self.corr_3d(R,).reshape((len(self.theta), len(x), len(self.urange))), pintg
+        "kij,i->kij", xi(R,).reshape((len(self.theta), len(x), len(self.urange))), pintg
     )
         return 2 * simpson(simpson(integrand, self.urange), x)
+    
+    def powerlaw(self,r):
+        return r ** -1.8
+
+    @property
+    def ang_corr(self):
+        return self.ang_projection(self.corr_3d)
 
     @property
     def zrange(self):

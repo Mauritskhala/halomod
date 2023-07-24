@@ -49,7 +49,7 @@ class Zheng05:
         m0=True
     ):
         self.m = mlist
-        self.mmin = 10 ** param[0]
+        self.mmin = param[0]
         self.sigma_logM = param[1]
         self.m1 = 10 ** param[2]
         self.m0 = 10 ** param[3] if m0 else 0
@@ -57,11 +57,14 @@ class Zheng05:
 
     @property
     def cen_bar(self):
-        return .5 * (1 + erf((self.m-self.mmin) / self.sigma_logM))
+        return .5 * (1 + erf((np.log10(self.m)-self.mmin) / self.sigma_logM))
 
     @property
     def satt_bar(self):
-        return ((self.m - self.m0) / self.m1) ** self.gamma
+        idx=np.where(self.m>self.m0)
+        sattcount=np.zeros_like(self.m)
+        sattcount[idx]=((self.m - self.m0) / self.m1)[idx] ** self.gamma
+        return sattcount
 
     @property
     def total_occupation(self):
@@ -69,7 +72,7 @@ class Zheng05:
 
     @property
     def cspair(self):
-        return self.satt_bar * self.cen_bar
+        return self.satt_bar * self.cen_bar * 2
 
     @property
     def sspair(self):
