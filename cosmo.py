@@ -10,7 +10,7 @@ class Cosmology:
     use `FLRW` as a father class?
     '''
 
-    def __init__(self, Pkfile, z=0, omegam=0.3, omegacc=0.7, rhocrit=27.75e10):
+    def __init__(self, Pkfile, z=0, omegam=0.31, omegacc=0.69, rhocrit=27.75e10):
         self._omegam = omegam
         self._omegacc = omegacc
         self._rhocrit = rhocrit
